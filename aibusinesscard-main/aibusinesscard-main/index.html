@@ -1,241 +1,297 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI GIFTING ENGINE</title>
-    <style>
-        :root { --gold: #D4AF37; --black: #0a0a0a; --grey: #1a1a1a; --white: #ffffff; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--black); color: var(--white); text-align: center; }
-        header { padding: 60px 20px; border-bottom: 2px solid var(--gold); background: #000; }
-        h1 { color: var(--gold); letter-spacing: 5px; margin: 0; font-size: 2.2rem; }
-        .container { max-width: 1200px; margin: 40px auto; padding: 20px; }
-        .category-title { color: var(--gold); text-align: left; border-left: 3px solid var(--gold); padding-left: 15px; margin: 40px 0 20px; font-weight: 300; text-transform: uppercase; letter-spacing: 2px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
-        .card { background: var(--grey); border-radius: 12px; padding: 15px; border: 1px solid #333; transition: 0.3s; text-decoration: none; color: white; display: block; }
-        .card:hover { transform: translateY(-5px); border-color: var(--gold); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.1); }
-        .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; filter: grayscale(30%); }
-        .card:hover img { filter: grayscale(0%); }
-        .card h3 { margin: 10px 0 5px; font-size: 1.1rem; color: var(--gold); }
-        .card p { font-size: 0.85rem; color: #aaa; margin-bottom: 15px; height: 40px; }
-        .btn { display: block; padding: 12px; background: var(--gold); color: black; font-weight: bold; border-radius: 4px; text-transform: uppercase; font-size: 0.8rem; }
-        footer { padding: 40px; color: #555; font-size: 0.8rem; border-top: 1px solid #222; margin-top: 60px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JEWELS-AI | Vault Media Manager</title>
+<style>
+:root{
+  --bg:#08050d;--panel:#100b17;--panel2:#150e1d;--gold:#e5c158;--gold2:#f9e7a2;
+  --text:#f5efe6;--muted:#a9a0ad;--line:rgba(229,193,88,.28);--purple:#7212b0;
+}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 50% 0,#21102f 0,#08050d 52%);color:var(--text);font-family:Arial,sans-serif;min-height:100vh}
+.wrap{width:min(960px,94vw);margin:28px auto;padding:24px;border:1px solid var(--line);border-radius:28px;background:rgba(16,11,23,.88);box-shadow:0 20px 70px #000}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:1px}.sub{color:var(--muted);font-size:12px;margin-bottom:22px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:0 0 7px;letter-spacing:.5px}
+input,select{width:100%;height:44px;border:1px solid rgba(255,255,255,.13);border-radius:10px;background:#07040b;color:#fff;padding:0 13px;outline:none}
+input:focus,select:focus{border-color:var(--gold)}
+.drop{margin-top:14px;border:1px dashed var(--line);border-radius:14px;min-height:130px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;background:rgba(255,255,255,.015)}
+.drop.drag{background:rgba(229,193,88,.08);border-color:var(--gold)}
+.drop strong{display:block;color:var(--gold2);font-size:12px}.drop span{font-size:11px;color:var(--muted)}
+.preview{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
+.preview img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px;border:1px solid var(--line)}
+.btn{border:0;border-radius:999px;height:46px;padding:0 24px;font-weight:800;letter-spacing:1px;cursor:pointer}
+.gold{background:linear-gradient(135deg,#f0cf63,#b78f1d);color:#160e02}.dark{background:#160f1d;border:1px solid var(--line);color:var(--gold2)}
+.actions{display:flex;gap:10px;margin-top:16px}.status{margin-top:14px;font-size:12px;color:var(--gold2);min-height:18px}
+.media-section{margin-top:22px;padding-top:20px;border-top:1px solid rgba(229,193,88,.16)}
+.media-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.media-title h2{font-size:12px;margin:0;letter-spacing:1px;color:var(--gold2)}
+.media-title span{font-size:10px;color:var(--muted)}
+.video-drop{border:1px dashed var(--line);border-radius:14px;min-height:120px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;background:rgba(255,255,255,.015);overflow:hidden}
+.video-drop.drag{background:rgba(229,193,88,.08);border-color:var(--gold)}
+.video-drop video{width:100%;max-height:220px;object-fit:contain;border-radius:12px}
+.video-name{margin-top:8px;font-size:11px;color:var(--muted);text-align:center}
+.video-actions{display:flex;gap:10px;margin-top:12px}
+.video-actions .btn{flex:1}
+.info{padding:15px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.025);font-size:12px;line-height:1.7;color:#c9c1cb}
+.info b{color:var(--gold2)}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.wrap{margin:10px auto;padding:18px}.preview{grid-template-columns:repeat(3,1fr)}}
+</style>
 </head>
 <body>
+<div class="wrap">
+  <h1>Vault Media Stream</h1>
+  <div class="sub">JEWELS-AI • Product Catalogue Upload Manager</div>
 
-    <header>
-        <h1>AI GIFTING ENGINE</h1>
-        <p style="color: #888;">Next-Generation AI Experiences by Nishanth</p>
-    </header>
+  <div class="grid">
+    <section>
+      <label for="productName">PRODUCT NAME</label>
+      <input id="productName" placeholder="E.g., Kundan Royal Choker">
 
-    <div class="container">
-        
-        <h2 class="category-title">AI GIFTING ENGINE</h2>
-        <div class="grid">
-            <a href="OGA1/index.html" class="card">
-                <div class="btn">OGA1</div>
-            </a>
+      <div style="height:14px"></div>
+      <label for="category">PRODUCT CATEGORY</label>
+      <select id="category">
+        <option value="">Select category</option>
+        <option value="Bangles">Bangles</option>
+        <option value="Bridal Collection">Bridal Collection</option>
+        <option value="Necklace">Necklace</option>
+        <option value="Rings">Rings</option>
+      </select>
 
-            <a href="OGA2/index.html" class="card">
-            
-                <div class="btn">OGA2</div>
-            </a>
-
-            <a href="OGA3/index.html" class="card">
-                
-                <div class="btn">OGA3</div>
-            </a>
-            <a href="OGA4/index.html" class="card">
-                <div class="btn">OGA4</div>
-            </a>
-
-            <a href="OGA5/index.html" class="card">
-            
-                <div class="btn">OGA5</div>
-            </a>
-
-            <a href="OGA6/index.html" class="card">
-                
-                <div class="btn">OGA6</div>
-            </a>
-            <a href="OGA7/index.html" class="card">
-                
-                <div class="btn">OGA7</div>
-            </a>
-        
-            <a href="OGA8/index.html" class="card">
-                
-                <div class="btn">OGA8</div>
-            </a>
-
-            <a href="OGA9/index.html" class="card">
-                
-                <div class="btn">OGA9</div>
-            </a>
-
-            <a href="OGA10/index.html" class="card">
-                
-                <div class="btn">OGA10</div>
-            </a>
-        
-            <a href="OGA11/index.html" class="card">
-                
-                <div class="btn">OGA11</div>
-            </a>
-
-            <a href="OGA12/index.html" class="card">
-                
-                <div class="btn">OGA12</div>
-            </a>
-
-            <a href="OGA13/index.html" class="card">
-                
-                <div class="btn">OGA13</div>
-            </a>
-        
-            <a href="OGA14/index.html" class="card">
-                
-                <div class="btn">OGA14</div>
-            </a>
-
-            <a href="OGA15/index.html" class="card">
-                
-                <div class="btn">OGA15</div>
-            </a>
-
-            <a href="OGA16/index.html" class="card">
-                
-                <div class="btn">OGA16</div>
-            </a>
-       
-            <a href="OGA17/index.html" class="card">
-                
-                <div class="btn">OGA17</div>
-            </a>
-
-            <a href="OGA18/index.html" class="card">
-                
-                <div class="btn">OGA18</div>
-            </a>
-
-            <a href="OGA19/index.html" class="card">
-                
-                <div class="btn">OGA19</div>
-            </a>
-        
-            <a href="OGA20/index.html" class="card">
-                
-                <div class="btn">OGA20</div>
-            </a>
-
-            <a href="OGA21/index.html" class="card">
-                
-                <div class="btn">OGA21</div>
-            </a>
-
-            <a href="OGA22/index.html" class="card">
-                
-                <div class="btn">OGA22</div>
-            </a>
-       
-            <a href="OGA23/index.html" class="card">
-                
-                <div class="btn">OGA23</div>
-            </a>
-
-            <a href="OGA24/index.html" class="card">
-                
-                <div class="btn">OGA24</div>
-            </a>
-            <a href="OGA25/index.html" class="card">
-                
-                <div class="btn">OGA25</div>
-            </a>
-        
-            <a href="OGA26/index.html" class="card">
-                
-                <div class="btn">OGA26</div>
-            </a>
-
-            <a href="OGA27/index.html" class="card">
-                
-                <div class="btn">OGA27</div>
-            </a>
-
-            <a href="OGA28/index.html" class="card">
-                
-                <div class="btn">OGA28</div>
-            </a>
-        
-            <a href="OGA29/index.html" class="card">
-                
-                <div class="btn">OGA29</div>
-            </a>
-
-            <a href="OGA30/index.html" class="card">
-                
-                <div class="btn">OGA30</div>
-            </a>
-
-            <a href="OGA31/index.html" class="card">
-                
-                <div class="btn">OGA31</div>
-            </a>
-       
-            <a href="OGA32/index.html" class="card">
-                
-                <div class="btn">OGA32</div>
-            </a>
-
-            <a href="OGA33/index.html" class="card">
-                
-                <div class="btn">OGA33</div>
-            </a>
-
-            <a href="OGA34/index.html" class="card">
-                
-                <div class="btn">OGA34</div>
-            </a>
-        
-            <a href="OGA35/index.html" class="card">
-                
-                <div class="btn">OGA35</div>
-            </a>
-
-            <a href="OGA36/index.html" class="card">
-                
-                <div class="btn">OGA36</div>
-            </a>
-
-            <a href="OGA37/index.html" class="card">
-                
-                <div class="btn">OGA37</div>
-            </a>
-       
-            <a href="OGA38/index.html" class="card">
-                
-                <div class="btn">OGA38</div>
-            </a>
-
-            <a href="OGA39/index.html" class="card">
-                
-                <div class="btn">OGA39</div>
-            </a>
-             <a href="OGA40/index.html" class="card">
-                
-                <div class="btn">OGA40</div>
-            </a>
-
-            
+      <div class="drop" id="drop">
+        <div>
+          <strong>📷 DROP OR SELECT CATALOGUE IMAGE HERE</strong>
+          <span>JPG, PNG, WEBP • Multiple images supported</span>
         </div>
+      </div>
+      <input id="files" type="file" accept="image/*" multiple hidden>
+      <div class="preview" id="preview"></div>
+    </section>
 
+    <section>
+      <div class="info">
+        <b>Automatic Drive & Sheet Routing</b><br>
+        Images are uploaded to their dedicated folder and written directly to your shared Google Sheet database (Catalogue tab).<br><br>
+        <b>Bangles</b> → Bangles folder<br>
+        <b>Bridal Collection</b> → Bridal Collection folder<br>
+        <b>Necklace</b> → Necklace folder<br>
+        <b>Rings</b> → Rings folder
+      </div>
+
+      <div class="actions">
+        <button class="btn dark" id="clear">CLEAR</button>
+        <button class="btn gold" id="upload">UPLOAD THE PRODUCT</button>
+      </div>
+      <div class="status" id="status"></div>
+    </section>
+  </div>
+
+  <section class="media-section">
+    <div class="media-title">
+      <h2>AR EXPERIENCE MEDIA (CARD TARGET)</h2>
+      <span>Card Target Video</span>
     </div>
 
-    <footer>
-        &copy; 2026 OVERLAY SHOPPING <br>
-        Powered by Nishanth Technology
-    </footer>
+    <div class="video-drop" id="videoDrop">
+      <div id="videoPlaceholder">
+        <strong style="display:block;color:var(--gold2);font-size:12px">🎬 DROP AR VIDEO HERE</strong>
+        <span style="font-size:11px;color:var(--muted)">MP4 / WebM • This video plays on your physical card</span>
+      </div>
+      <video id="videoPreview" controls playsinline muted style="display:none"></video>
+    </div>
 
+    <input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime" hidden>
+    <div class="video-name" id="videoName">Awaiting video file...</div>
+
+    <div class="video-actions">
+      <button class="btn dark" id="clearVideo" type="button">CLEAR VIDEO</button>
+      <button class="btn gold" id="uploadVideo" type="button">UPLOAD AR VIDEO TRACK</button>
+    </div>
+    <div class="status" id="videoStatus"></div>
+  </section>
+</div>
+
+<script>
+const UNIFIED_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyngfPB7bGYIKPDDJk6ZSumck8AcnX586OISrt0AfPAzzibiFNS0GmqO3QF9q5C464K/exec";
+
+const FOLDERS = {
+  "Bangles": "1loeb_40A3eOjzB2PnY24MXsxKFsE06L-",
+  "Bridal Collection": "1RQJWVfvRpvcQw_DdhWxZKB18-GzKoD3B",
+  "Necklace": "1Zmg8bnpmOChwqwrVWFeBCvXxOEQihC3Q",
+  "Rings": "1Xz92BSq1jtdxJyiKO5o7lzx0bepnDQzz"
+};
+
+const drop = document.getElementById("drop"), filesEl = document.getElementById("files");
+const preview = document.getElementById("preview"), statusEl = document.getElementById("status");
+let selected = [];
+
+drop.onclick = () => filesEl.click();
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("drag"); };
+drop.ondragleave = () => drop.classList.remove("drag");
+drop.ondrop = e => {
+  e.preventDefault();
+  drop.classList.remove("drag");
+  addFiles([...e.dataTransfer.files]);
+};
+filesEl.onchange = () => addFiles([...filesEl.files]);
+
+function addFiles(list){
+  selected = [...selected, ...list.filter(f => f.type.startsWith("image/"))];
+  renderPreview();
+}
+function renderPreview(){
+  preview.innerHTML = "";
+  selected.forEach(f => {
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(f);
+    preview.appendChild(img);
+  });
+}
+document.getElementById("clear").onclick = () => {
+  selected = [];
+  filesEl.value = "";
+  preview.innerHTML = "";
+  statusEl.textContent = "";
+};
+
+function readAsDataURL(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+document.getElementById("upload").onclick = async () => {
+  const name = document.getElementById("productName").value.trim();
+  const category = document.getElementById("category").value;
+  if (!name) return alert("Please enter Product Name.");
+  if (!category) return alert("Please select Product Category.");
+  if (!FOLDERS[category]) return alert("No Google Drive folder has been configured for " + category + ".");
+  if (!selected.length) return alert("Please select at least one catalogue image.");
+
+  const btn = document.getElementById("upload");
+  btn.disabled = true;
+  try {
+    for (let i = 0; i < selected.length; i++) {
+      statusEl.textContent = `Uploading ${i + 1} of ${selected.length}…`;
+      const data = await readAsDataURL(selected[i]);
+      const payload = {
+        action: "uploadProductImage",
+        folderId: FOLDERS[category],
+        category: category,
+        productName: name,
+        fileName: selected[i].name,
+        mimeType: selected[i].type,
+        data: data
+      };
+      const res = await fetch(UNIFIED_APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error || "Upload failed");
+    }
+    statusEl.textContent = `✓ ${selected.length} image(s) uploaded and logged to Catalogue.`;
+    selected = [];
+    filesEl.value = "";
+    preview.innerHTML = "";
+    document.getElementById("productName").value = "";
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "Upload failed: " + err.message;
+    alert("Upload failed. Check Drive permissions and try again.");
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+// ---------- AR EXPERIENCE MEDIA / VIDEO UPLOAD ----------
+const videoDrop = document.getElementById("videoDrop");
+const videoFileEl = document.getElementById("videoFile");
+const videoPreview = document.getElementById("videoPreview");
+const videoPlaceholder = document.getElementById("videoPlaceholder");
+const videoName = document.getElementById("videoName");
+const videoStatus = document.getElementById("videoStatus");
+const uploadVideoBtn = document.getElementById("uploadVideo");
+const clearVideoBtn = document.getElementById("clearVideo");
+
+let selectedVideo = null;
+
+videoDrop.addEventListener("click", () => videoFileEl.click());
+videoDrop.addEventListener("dragover", e => { e.preventDefault(); videoDrop.classList.add("drag"); });
+videoDrop.addEventListener("dragleave", () => videoDrop.classList.remove("drag"));
+videoDrop.addEventListener("drop", e => {
+  e.preventDefault();
+  videoDrop.classList.remove("drag");
+  const file = [...e.dataTransfer.files].find(f => f.type.startsWith("video/"));
+  if (file) setVideo(file);
+  else alert("Please select an MP4, WebM or compatible video file.");
+});
+
+videoFileEl.addEventListener("change", () => {
+  if (videoFileEl.files[0]) setVideo(videoFileEl.files[0]);
+});
+
+function setVideo(file) {
+  selectedVideo = file;
+  videoPreview.src = URL.createObjectURL(file);
+  videoPreview.style.display = "block";
+  videoPlaceholder.style.display = "none";
+  videoName.textContent = file.name;
+  videoStatus.textContent = "";
+}
+
+function clearVideo() {
+  selectedVideo = null;
+  videoFileEl.value = "";
+  videoPreview.pause();
+  videoPreview.removeAttribute("src");
+  videoPreview.load();
+  videoPreview.style.display = "none";
+  videoPlaceholder.style.display = "block";
+  videoName.textContent = "Awaiting video file...";
+  videoStatus.textContent = "";
+}
+
+clearVideoBtn.addEventListener("click", clearVideo);
+
+uploadVideoBtn.addEventListener("click", async () => {
+  if (!selectedVideo) return alert("Please select an AR video first.");
+
+  uploadVideoBtn.disabled = true;
+  videoStatus.textContent = "Uploading AR video…";
+
+  try {
+    const data = await readAsDataURL(selectedVideo);
+    const payload = {
+      action: "uploadARVideo",
+      fileName: selectedVideo.name,
+      mimeType: selectedVideo.type,
+      data: data
+    };
+
+    const res = await fetch(UNIFIED_APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error || "Video upload failed.");
+
+    videoStatus.textContent = "✓ AR video uploaded and logged to Media_Logs.";
+  } catch (err) {
+    console.error(err);
+    videoStatus.textContent = "Upload failed: " + err.message;
+    alert("AR video upload failed. Check the Apps Script deployment.");
+  } finally {
+    uploadVideoBtn.disabled = false;
+  }
+});
+</script>
 </body>
 </html>
