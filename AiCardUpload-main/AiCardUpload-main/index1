@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AR Memory | Elite</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+
+  :root {
+    --neon: #00ff99;
+    --neon-muted: rgba(0, 255, 153, 0.15);
+    --bg-black: #080808;
+    --surface: #121212;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Space Grotesk', sans-serif;
+    background-color: var(--bg-black);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-glow {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
+    z-index: -1;
+  }
+
+  .card-elite {
+    width: 90%;
+    max-width: 370px;
+    background: var(--surface);
+    border-radius: 40px;
+    padding: 40px 25px;
+    box-shadow: 0 0 50px rgba(0,0,0,1), inset 0 1px 1px rgba(255,255,255,0.1);
+    text-align: center;
+    position: relative;
+    border: 1px solid #222;
+    margin: 30px 0;
+  }
+
+  .status-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 100px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #666;
+    margin-bottom: 25px;
+  }
+
+  h2 {
+    font-size: 28px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+
+  .desc {
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .compress-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #000;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: #999;
+  }
+
+  .switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+  }
+
+  .switch input { display: none; }
+
+  .slider-toggle {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #333;
+    border-radius: 22px;
+    transition: 0.3s;
+  }
+
+  .slider-toggle::before {
+    content: "";
+    position: absolute;
+    height: 16px; width: 16px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+
+  .switch input:checked + .slider-toggle {
+    background-color: var(--neon);
+  }
+
+  .switch input:checked + .slider-toggle::before {
+    transform: translateX(18px);
+  }
+
+  .holo-zone {
+    width: 100%;
+    aspect-ratio: 1/1;
+    background: #000;
+    border-radius: 30px;
+    margin-bottom: 30px;
+    border: 1px solid #222;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    transition: 0.4s;
+    overflow: hidden;
+  }
+
+  .holo-zone:hover {
+    border-color: var(--neon);
+    box-shadow: 0 0 20px var(--neon-muted);
+  }
+
+  .holo-zone::after {
+    content: "";
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
+    transform: rotate(45deg);
+    animation: shine 4s infinite;
+  }
+
+  @keyframes shine {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+  }
+
+  #videoPreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+    z-index: 2;
+  }
+
+  .upload-prompt {
+    z-index: 1;
+    transition: 0.3s;
+  }
+
+  .file-meta {
+    font-size: 11px;
+    color: #444;
+    margin-top: -18px;
+    margin-bottom: 18px;
+    min-height: 14px;
+  }
+
+  .btn-elite {
+    width: 100%;
+    padding: 22px;
+    border-radius: 20px;
+    border: none;
+    background: linear-gradient(135deg, #fff 0%, #d1d1d1 100%);
+    color: #000;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .btn-elite:hover {
+    background: var(--neon);
+    box-shadow: 0 15px 30px var(--neon-muted);
+    transform: translateY(-3px);
+  }
+
+  .btn-elite:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .progress-wrap {
+    margin-top: 30px;
+    display: none;
+  }
+
+  .bar-container {
+    width: 100%;
+    height: 3px;
+    background: #222;
+    position: relative;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--neon);
+    box-shadow: 0 0 10px var(--neon);
+    transition: width 0.25s ease;
+  }
+
+  #status-msg {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  input[type="file"] { display: none; }
+
+  #toast {
+    visibility: hidden;
+    position: fixed;
+    top: 20px;
+    background: #ff3333;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 1000;
+  }
+  #toast.show { visibility: visible; animation: dropDown 2.5s; }
+
+  @keyframes dropDown {
+    0% { transform: translateY(-50px); opacity: 0; }
+    15% { transform: translateY(0); opacity: 1; }
+    85% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-50px); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<div class="card-elite">
+  <div class="status-pill">System Ready • <span id="productLabel">...</span></div>
+
+  <h2>Activate AI Gift</h2>
+  <p class="desc">Link your video to your memory</p>
+
+  <div class="compress-toggle">
+    <span>Compress before upload (faster, smaller)</span>
+    <label class="switch">
+      <input type="checkbox" id="compressToggle" checked>
+      <span class="slider-toggle"></span>
+    </label>
+  </div>
+
+  <div class="holo-zone" onclick="document.getElementById('videoFile').click()">
+    <div class="upload-prompt" id="promptText">
+      <div style="font-size: 40px; margin-bottom: 10px; filter: grayscale(1);">⚡</div>
+      <div style="font-weight: 500;">CHOOSE MEMORY</div>
+    </div>
+    <video id="videoPreview" autoplay muted loop playsinline></video>
+  </div>
+  <div class="file-meta" id="fileMeta"></div>
+
+  <input type="hidden" id="productId">
+  <input type="file" id="videoFile" accept="video/*" onchange="previewFile(this)">
+
+  <button class="btn-elite" id="uploadBtn" onclick="initiateUpload()">Upload & Link</button>
+
+  <div class="progress-wrap" id="progressBox">
+    <div class="bar-container">
+      <div class="bar-fill" id="progressBar"></div>
+    </div>
+    <div id="status-msg">Awaiting data...</div>
+  </div>
+</div>
+
+<div id="toast">SYSTEM RESTRICTION: ACTION BLOCKED</div>
+
+<script>
+// --- CONFIG ---
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbylGKg79Mu95hPqXsAY4c9_7ifROjfJ2gulUPP4XuUukWCHWkROH60SkuDMjxr9F79L/exec";
+
+// Raw file the user can pick, before any compression
+const MAX_INPUT_MB = 300;
+// Hard ceiling on what we'll actually send to Apps Script (base64 adds ~33% on top of this)
+const MAX_UPLOAD_MB = 15;
+
+// Compression targets — tuned for "gift video" quality at much smaller size
+const COMPRESS_MAX_WIDTH = 854;       // ~480p width, keeps files small and fast
+const COMPRESS_VIDEO_BITRATE = 1_500_000; // 1.5 Mbps
+const COMPRESS_AUDIO_BITRATE = 96_000;
+
+let selectedFile = null;
+
+// Security - Anti-Inspect
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener("keydown", e => {
+  if (e.key === "F12" || (e.ctrlKey && e.shiftKey && "IJC".includes(e.key)) || (e.ctrlKey && e.key === "u")) {
+    e.preventDefault();
+    const t = document.getElementById("toast");
+    t.className = "show";
+    setTimeout(() => { t.className = ""; }, 2500);
+  }
+});
+
+window.onload = () => {
+  const pId = new URLSearchParams(window.location.search).get("product");
+  if (pId) {
+    document.getElementById("productId").value = pId;
+    document.getElementById("productLabel").innerText = pId;
+  } else {
+    document.getElementById("status-msg").innerText = "Error: Invalid Handshake";
+    document.getElementById("uploadBtn").disabled = true;
+  }
+
+  // Compression relies on MediaRecorder + canvas.captureStream; hide the
+  // toggle (and default to off) on browsers that don't support it.
+  const supported = !!(window.MediaRecorder && HTMLCanvasElement.prototype.captureStream);
+  if (!supported) {
+    document.getElementById("compressToggle").checked = false;
+    document.querySelector(".compress-toggle").style.display = "none";
+  }
+};
+
+function formatMB(bytes) {
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+function previewFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  if (file.size > MAX_INPUT_MB * 1024 * 1024) {
+    document.getElementById("fileMeta").innerText = `File too large (max ${MAX_INPUT_MB}MB)`;
+    input.value = "";
+    return;
+  }
+
+  selectedFile = file;
+  document.getElementById('promptText').style.display = 'none';
+  const preview = document.getElementById('videoPreview');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+  document.getElementById("fileMeta").innerText = `Selected: ${formatMB(file.size)}`;
+}
+
+// --- Client-side compression ---
+// Draws the video to a downscaled canvas and re-encodes it with
+// MediaRecorder at a low, fixed bitrate. This is what actually makes the
+// upload fast: shrinking the file before it hits the network, not just
+// showing a nicer progress bar.
+function compressVideo(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.playsInline = true;
+    video.src = URL.createObjectURL(file);
+
+    video.onloadedmetadata = () => {
+      const scale = Math.min(1, COMPRESS_MAX_WIDTH / video.videoWidth);
+      const w = Math.max(2, Math.round((video.videoWidth * scale) / 2) * 2);
+      const h = Math.max(2, Math.round((video.videoHeight * scale) / 2) * 2);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+
+      const canvasStream = canvas.captureStream(30);
+      let combinedStream = canvasStream;
+
+      // Try to carry audio through via WebAudio. If it fails (some mobile
+      // browsers restrict this), we fall back to a silent compressed video
+      // rather than failing the whole upload.
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioCtx();
+        const source = audioCtx.createMediaElementSource(video);
+        const dest = audioCtx.createMediaStreamDestination();
+        source.connect(dest);
+        combinedStream = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...dest.stream.getAudioTracks()
+        ]);
+      } catch (e) {
+        // proceed video-only
+      }
+
+      let mimeType = 'video/webm;codecs=vp9,opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
+
+      let recorder;
+      try {
+        recorder = new MediaRecorder(combinedStream, {
+          mimeType,
+          videoBitsPerSecond: COMPRESS_VIDEO_BITRATE,
+          audioBitsPerSecond: COMPRESS_AUDIO_BITRATE
+        });
+      } catch (e) {
+        reject(e);
+        return;
+      }
+
+      const chunks = [];
+      recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
+      recorder.onerror = reject;
+
+      video.muted = true; // needed for autoplay; WebAudio graph still receives samples
+      video.currentTime = 0;
+
+      let drawing = true;
+      function drawFrame() {
+        if (!drawing) return;
+        ctx.drawImage(video, 0, 0, w, h);
+        if (video.duration) {
+          onProgress(Math.min(99, Math.round((video.currentTime / video.duration) * 100)));
+        }
+        requestAnimationFrame(drawFrame);
+      }
+
+      video.onended = () => {
+        drawing = false;
+        recorder.stop();
+      };
+
+      video.onerror = reject;
+
+      recorder.start();
+      video.play().then(drawFrame).catch(reject);
+    };
+
+    video.onerror = reject;
+  });
+}
+
+// --- Upload with real progress (XHR gives us upload.onprogress) ---
+function uploadBase64(base64, fileName, productId, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", WEB_APP_URL, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+
+    // Apps Script web apps redirect and don't send CORS headers back to us,
+    // so we can't reliably read the response — but we CAN track upload
+    // progress, which is the part that was actually opaque before.
+    xhr.onload = () => resolve();
+    xhr.onerror = () => reject(new Error("Network error during upload"));
+
+    xhr.send(JSON.stringify({ productId, file: base64, fileName }));
+  });
+}
+
+async function initiateUpload() {
+  const pId = document.getElementById("productId").value;
+  const status = document.getElementById("status-msg");
+  const bar = document.getElementById("progressBar");
+  const box = document.getElementById("progressBox");
+  const btn = document.getElementById("uploadBtn");
+  const wantsCompression = document.getElementById("compressToggle").checked;
+
+  if (!selectedFile) return;
+
+  btn.disabled = true;
+  box.style.display = "block";
+  bar.style.width = "0%";
+
+  let uploadBlob = selectedFile;
+  let uploadName = selectedFile.name;
+
+  try {
+    if (wantsCompression) {
+      btn.innerText = "Compressing...";
+      status.innerText = "Compressing memory (0%)...";
+      uploadBlob = await compressVideo(selectedFile, (pct) => {
+        bar.style.width = (pct * 0.5) + "%"; // compression = first half of the bar
+        status.innerText = `Compressing memory (${pct}%)...`;
+      });
+      uploadName = selectedFile.name.replace(/\.[^/.]+$/, "") + ".webm";
+      status.innerText = `Compressed: ${formatMB(selectedFile.size)} → ${formatMB(uploadBlob.size)}`;
+    }
+
+    if (uploadBlob.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      status.innerText = `Still too large after processing (max ${MAX_UPLOAD_MB}MB). Try a shorter clip.`;
+      btn.disabled = false;
+      btn.innerText = "Retry Link";
+      return;
+    }
+
+    btn.innerText = "Syncing...";
+    status.innerText = "Encrypting memory packet...";
+
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(uploadBlob);
+    });
+
+    await uploadBase64(base64, uploadName, pId, (pct) => {
+      const overall = wantsCompression ? 50 + pct * 0.5 : pct;
+      bar.style.width = overall + "%";
+      status.innerText = `Uploading (${pct}%)...`;
+    });
+
+    bar.style.width = "100%";
+    status.style.color = "var(--neon)";
+    status.innerText = "Data Transferred Successfully";
+    btn.innerText = "Linked";
+
+  } catch (err) {
+    console.error(err);
+    status.innerText = "UPLINK FAILED. RETRY.";
+    btn.disabled = false;
+    btn.innerText = "Retry Link";
+  }
+}
+</script>
+
+</body>
+</html>

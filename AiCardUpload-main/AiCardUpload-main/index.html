@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jewels-AI | Catalogue Vault Manager</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-black: #08060b;
+      --card-bg: #120c1a;
+      --border-gold: rgba(229, 193, 88, 0.28);
+      --gold: #E5C158;
+      --gold-bright: #fced9e;
+      --gold-btn: linear-gradient(135deg, #dfba4f 0%, #a27b1c 100%);
+      --cream: #F5EFE6;
+      --cream-dim: rgba(245, 239, 230, 0.6);
+      --input-bg: #09050d;
+      --divider: rgba(229, 193, 88, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-black);
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--cream);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 14px 50px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .ambient-glow {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(850px, 100vw);
+      height: min(850px, 100vw);
+      background: radial-gradient(circle, rgba(229, 193, 88, 0.08) 0%, rgba(114, 18, 176, 0.12) 40%, transparent 70%);
+      border-radius: 50%;
+      z-index: 0;
+      pointer-events: none;
+      filter: blur(40px);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      z-index: 1;
+    }
+
+    .header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(24px, 5vw, 32px);
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #FFFFFF;
+      text-shadow: 0 0 20px rgba(229, 193, 88, 0.3);
+    }
+
+    .header .subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(18px, 4vw, 22px);
+      color: var(--gold);
+      letter-spacing: 1.5px;
+      margin-top: 2px;
+    }
+
+    .vault-console {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 600px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-gold);
+      border-radius: 26px;
+      padding: 22px 18px;
+      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .top-split {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 580px) {
+      .top-split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .media-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stream-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .stream-count {
+      font-size: 10px;
+      color: var(--cream-dim);
+    }
+
+    .select-all-btn {
+      background: transparent;
+      border: 1px solid var(--border-gold);
+      color: var(--gold);
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .media-card {
+      position: relative;
+      background: #000;
+      border: 1px solid #231b2e;
+      border-radius: 10px;
+      overflow: hidden;
+      aspect-ratio: 1;
+      cursor: pointer;
+    }
+
+    .media-card.selected {
+      border-color: var(--gold);
+      box-shadow: 0 0 8px rgba(229, 193, 88, 0.3);
+    }
+
+    .media-card.soft-deleted {
+      opacity: 0.25;
+      filter: grayscale(1);
+    }
+
+    .media-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-checkbox {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1.5px solid var(--gold);
+      background: rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-checkbox.checked {
+      background: var(--gold);
+    }
+
+    .card-checkbox.checked::after {
+      content: "✓";
+      color: #000;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .metadata-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .form-label {
+      font-size: 10px;
+      color: var(--cream-dim);
+    }
+
+    .custom-input, select, textarea {
+      width: 100%;
+      padding: 7px 10px;
+      background: var(--input-bg);
+      border: 1px solid #282035;
+      border-radius: 8px;
+      color: var(--cream);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .custom-input:focus, select:focus, textarea:focus {
+      border-color: var(--gold);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 48px;
+    }
+
+    .catalogue-upload-strip {
+      border: 1px dashed rgba(229, 193, 88, 0.45);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .catalogue-upload-strip:hover {
+      border-color: var(--gold);
+      background: rgba(229, 193, 88, 0.05);
+    }
+
+    .upload-strip-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .strip-icon {
+      font-size: 24px;
+    }
+
+    .strip-text {
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      color: var(--cream);
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .primary-btn {
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: none;
+      background: var(--gold-btn);
+      color: #0d0617;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(229, 193, 88, 0.25);
+    }
+
+    .primary-btn:hover {
+      filter: brightness(1.1);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .soft-delete-btn {
+      width: 100%;
+      padding: 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border-gold);
+      background: var(--gold-btn);
+      color: #0d0617;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: filter 0.2s ease;
+    }
+
+    .soft-delete-btn:hover {
+      filter: brightness(1.1);
+    }
+
+    .ar-target-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .ar-target-banner {
+      width: 100%;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(229, 193, 88, 0.28) 0%, rgba(162, 123, 28, 0.2) 100%);
+      border: 1px solid var(--gold);
+      color: var(--gold-bright);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .ar-media-drop-zone {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--border-gold);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    @media (max-width: 500px) {
+      .ar-media-drop-zone {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .video-drop-card {
+      border: 1px dashed rgba(229, 193, 88, 0.45);
+      border-radius: 10px;
+      background: rgba(9, 5, 13, 0.7);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      min-height: 80px;
+    }
+
+    .video-drop-label {
+      font-size: 11px;
+      color: var(--cream);
+    }
+
+    .video-opt-side {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .video-opt-label {
+      font-size: 10px;
+      color: var(--cream-dim);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .video-opt-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: #1c1524;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .video-opt-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #e5c158 0%, #fced9e 100%);
+      transition: width 0.3s ease;
+    }
+
+    .video-status-text {
+      font-size: 9px;
+      color: #9c8eaf;
+    }
+
+    .upload-track-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 999px;
+      border: none;
+      background: var(--gold-btn);
+      color: #0d0617;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .upload-track-btn:hover {
+      filter: brightness(1.1);
+    }
+
+    .upload-track-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    #vaultToast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 9px 18px;
+      background: rgba(18, 12, 26, 0.95);
+      border: 1px solid var(--gold);
+      border-radius: 999px;
+      color: var(--gold-bright);
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      z-index: 5000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+
+    #vaultToast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 10px;
+      color: rgba(245, 239, 230, 0.35);
+      letter-spacing: 0.8px;
+    }
+
+    .footer span {
+      color: var(--gold);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="ambient-glow"></div>
+
+  <header class="header">
+    <h1>Jewels-AI | Catalogue Vault</h1>
+    <div class="subtitle">Vault Manager</div>
+  </header>
+
+  <main class="vault-console">
+
+    <div class="top-split">
+      <section class="media-stream">
+        <div class="stream-header">
+          <div>
+            <div class="section-title">Vault Media Stream</div>
+            <div class="stream-count">Live Vault Media (7 Files)</div>
+          </div>
+          <button class="select-all-btn" id="selectAllBtn">
+            <span>☑</span> Select All
+          </button>
+        </div>
+
+        <div class="media-grid" id="mediaGrid">
+          <div class="media-card" data-name="Solitaire Diamond Ring" data-cat="Rings" data-purity="18K White Gold" data-desc="Brilliant cut round solitaire.">
+            <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=350" alt="Ring" />
+            <div class="card-checkbox checked"></div>
+          </div>
+          <div class="media-card" data-name="Bridal Kundan Choker" data-cat="Bridal Collection" data-purity="22K Yellow Gold" data-desc="Royal heritage wedding set.">
+            <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=350" alt="Bridal" />
+            <div class="card-checkbox checked"></div>
+          </div>
+          <div class="media-card" data-name="Emerald Ring" data-cat="Rings" data-purity="18K Gold" data-desc="Natural uncut stone.">
+            <img src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=350" alt="Ring" />
+            <div class="card-checkbox checked"></div>
+          </div>
+          <div class="media-card" data-name="Antique Filigree Kada" data-cat="Bangles" data-purity="22K Polish" data-desc="Royal screw bangles.">
+            <img src="https://images.unsplash.com/photo-1611591475824-7890f576e107?w=350" alt="Bangles" />
+            <div class="card-checkbox checked"></div>
+          </div>
+          <div class="media-card" data-name="Bridal Pearl Haar" data-cat="Bridal Collection" data-purity="22K Gold" data-desc="Multi-layered bridal necklace.">
+            <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=350" alt="Bridal" />
+            <div class="card-checkbox checked"></div>
+          </div>
+          <div class="media-card" data-name="Diamond Solitaire Box" data-cat="Rings" data-purity="Platinum 950" data-desc="Cushion engagement ring.">
+            <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=350" alt="Ring" />
+            <div class="card-checkbox checked"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="metadata-editor">
+        <div class="section-title">File Metadata Editor</div>
+
+        <div class="form-group">
+          <label class="form-label" for="productNameInput">Product Name</label>
+          <input type="text" class="custom-input" id="productNameInput" placeholder="E.g., Kundan Royal Choker" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="categorySelect">Product Category</label>
+          <select id="categorySelect">
+            <option value="Bangles">Bangles</option>
+            <option value="Bridal Collection" selected>Bridal Collection</option>
+            <option value="Necklace">Necklace</option>
+            <option value="Rings">Rings</option>
+            <option value="OGA1">OGA1</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="purityInput">Purity / Metal</label>
+          <input type="text" class="custom-input" id="purityInput" placeholder="E.g., 22K Gold" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="descriptionInput">Description</label>
+          <textarea id="descriptionInput" placeholder="Add product details and specifications..."></textarea>
+        </div>
+      </section>
+    </div>
+
+    <div class="catalogue-upload-strip" id="catalogueUploadStrip">
+      <div class="upload-strip-left" onclick="document.getElementById('productImageFileInput').click()">
+        <span class="strip-icon">📸💍</span>
+        <span class="strip-text" id="catalogueImageLabel">Drop or Select Catalogue Image Here</span>
+      </div>
+      <button class="primary-btn" id="uploadProductBtn" onclick="initiateProductUpload()">Upload the Product</button>
+    </div>
+
+    <button class="soft-delete-btn" id="softDeleteBtn" onclick="initiateSoftDelete()">
+      Remove Selected from Customer View (Soft Delete)
+    </button>
+
+    <section class="ar-target-section">
+      <div class="ar-target-banner">AR Experience Media (Card Target)</div>
+
+      <div class="ar-media-drop-zone">
+        <div class="video-drop-card" id="videoDropCard" onclick="document.getElementById('arVideoFileInput').click()">
+          <span style="font-size: 24px;">🎬</span>
+          <div class="video-drop-label" id="videoDropLabel">Drop AR Video Here</div>
+        </div>
+
+        <div class="video-opt-side">
+          <div class="video-opt-label">
+            <span>AR Video Optimization</span>
+            <span id="videoOptPercent">0%</span>
+          </div>
+          <div class="video-opt-bar-bg">
+            <div class="video-opt-bar-fill" id="videoOptFill"></div>
+          </div>
+          <div class="video-status-text" id="videoStatusText">Awaiting video file...</div>
+        </div>
+      </div>
+
+      <button class="upload-track-btn" id="uploadArVideoBtn" onclick="initiateVideoUpload()">
+        Upload AR Video Track
+      </button>
+    </section>
+
+  </main>
+
+  <div id="vaultToast">Action updated successfully</div>
+
+  <footer class="footer">
+    © 2022 Jewels-AI. All rights reserved<br />
+    Powered by <span>Jewels-AI</span>
+  </footer>
+
+  <input type="file" id="productImageFileInput" accept="image/*" onchange="handleProductImageSelect(this)" />
+  <input type="file" id="arVideoFileInput" accept="video/*" onchange="handleArVideoSelect(this)" />
+
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxy00k2Wyp-e-bfmeiaUaR8teIW36YnFpRmRILXoxZSuG_4UpCTObzLDxWSCvuPAbOt/exec";
+
+    let selectedImageBase64 = null;
+    let selectedImageName = "";
+    let selectedVideoFile = null;
+
+    function showToast(msg) {
+      const toast = document.getElementById("vaultToast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    document.querySelectorAll(".media-card").forEach(card => {
+      card.addEventListener("click", (e) => {
+        const checkbox = card.querySelector(".card-checkbox");
+        if (e.target === checkbox) {
+          checkbox.classList.toggle("checked");
+          return;
+        }
+
+        document.querySelectorAll(".media-card").forEach(c => c.classList.remove("selected"));
+        card.classList.add("selected");
+
+        document.getElementById("productNameInput").value = card.dataset.name || "";
+        document.getElementById("categorySelect").value = card.dataset.cat || "Bridal Collection";
+        document.getElementById("purityInput").value = card.dataset.purity || "";
+        document.getElementById("descriptionInput").value = card.dataset.desc || "";
+      });
+    });
+
+    let allSelected = true;
+    document.getElementById("selectAllBtn").addEventListener("click", () => {
+      allSelected = !allSelected;
+      document.querySelectorAll(".card-checkbox").forEach(cb => {
+        if (allSelected) cb.classList.add("checked");
+        else cb.classList.remove("checked");
+      });
+      document.getElementById("selectAllBtn").innerHTML = allSelected ? "<span>☑</span> Deselect All" : "<span>☑</span> Select All";
+    });
+
+    function handleProductImageSelect(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      selectedImageName = file.name;
+      document.getElementById("catalogueImageLabel").textContent = file.name.length > 20 ? file.name.slice(0, 18) + "..." : file.name;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        selectedImageBase64 = e.target.result.split(',')[1];
+        showToast("Product image ready for upload");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function initiateProductUpload() {
+      const name = document.getElementById("productNameInput").value.trim();
+      const category = document.getElementById("categorySelect").value;
+      const purity = document.getElementById("purityInput").value.trim();
+      const description = document.getElementById("descriptionInput").value.trim();
+      const btn = document.getElementById("uploadProductBtn");
+
+      if (!name) {
+        showToast("Please enter a Product Name");
+        return;
+      }
+
+      if (!selectedImageBase64) {
+        showToast("Please select a catalogue image first");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "Uploading...";
+
+      try {
+        await fetch(WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "uploadProduct",
+            name: name,
+            category: category,
+            folderName: category,
+            purity: purity,
+            description: description,
+            imageName: selectedImageName,
+            imageFile: selectedImageBase64
+          })
+        });
+
+        showToast(`${name} uploaded successfully!`);
+        btn.innerText = "Uploaded";
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerText = "Upload the Product";
+        }, 2000);
+      } catch (err) {
+        showToast("Upload failed. Try again.");
+        btn.disabled = false;
+        btn.innerText = "Upload the Product";
+      }
+    }
+
+    async function initiateSoftDelete() {
+      const checkedCards = Array.from(document.querySelectorAll(".card-checkbox.checked")).map(cb => {
+        return cb.closest(".media-card").dataset.name;
+      });
+
+      if (checkedCards.length === 0) {
+        showToast("No products checked to remove");
+        return;
+      }
+
+      const btn = document.getElementById("softDeleteBtn");
+      btn.disabled = true;
+      btn.innerText = "Hiding selected...";
+
+      try {
+        await fetch(WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "softDelete",
+            items: checkedCards
+          })
+        });
+
+        document.querySelectorAll(".card-checkbox.checked").forEach(cb => {
+          cb.closest(".media-card").classList.add("soft-deleted");
+          cb.classList.remove("checked");
+        });
+
+        showToast(`Hidden ${checkedCards.length} item(s) from customer view`);
+      } catch(e) {
+        showToast("Failed to update status");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Remove Selected from Customer View (Soft Delete)";
+      }
+    }
+
+    function handleArVideoSelect(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      selectedVideoFile = file;
+      document.getElementById("videoDropLabel").textContent = file.name.length > 20 ? file.name.slice(0, 18) + "..." : file.name;
+
+      let p = 0;
+      const interval = setInterval(() => {
+        p += 20;
+        document.getElementById("videoOptFill").style.width = p + "%";
+        document.getElementById("videoOptPercent").textContent = p + "%";
+        if (p >= 100) {
+          clearInterval(interval);
+          document.getElementById("videoStatusText").textContent = "Optimized for AR Track";
+          showToast("Video prepared for AR Target");
+        }
+      }, 100);
+    }
+
+    async function initiateVideoUpload() {
+      if (!selectedVideoFile) {
+        showToast("Please drop an AR Video file first");
+        return;
+      }
+
+      const btn = document.getElementById("uploadArVideoBtn");
+      btn.disabled = true;
+      btn.innerText = "Deploying Video Track...";
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target.result.split(',')[1];
+        try {
+          await fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "uploadTargetVideo",
+              folderName: "AR_TARGET_VIDEO",
+              fileName: selectedVideoFile.name,
+              videoFile: base64
+            })
+          });
+
+          showToast("AR Video uploaded to Card Target Folder!");
+          btn.innerText = "Video Linked";
+        } catch (err) {
+          showToast("Video upload failed");
+          btn.innerText = "Upload AR Video Track";
+        } finally {
+          btn.disabled = false;
+        }
+      };
+      reader.readAsDataURL(selectedVideoFile);
+    }
+  </script>
+</body>
+</html>

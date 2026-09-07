@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AR Memory | Elite</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+
+  :root {
+    --neon: #00ff99;
+    --neon-muted: rgba(0, 255, 153, 0.15);
+    --bg-black: #080808;
+    --surface: #121212;
+  }
+
+  body {
+    margin: 0;
+    padding: 24px 0;
+    font-family: 'Space Grotesk', sans-serif;
+    background-color: var(--bg-black);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+
+  .bg-glow {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
+    z-index: -1;
+  }
+
+  .card-elite {
+    width: 90%;
+    max-width: 380px;
+    background: var(--surface);
+    border-radius: 40px;
+    padding: 35px 25px;
+    box-shadow: 0 0 50px rgba(0,0,0,1), inset 0 1px 1px rgba(255,255,255,0.1);
+    text-align: center;
+    position: relative;
+    border: 1px solid #222;
+    box-sizing: border-box;
+  }
+
+  .status-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 100px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+
+  h2 {
+    font-size: 26px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+
+  .desc {
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 25px;
+  }
+
+  /* Holographic Drop Zone - Flexibly expands/contracts with video aspect ratio */
+  .holo-zone {
+    width: 100%;
+    min-height: 180px;
+    max-height: 420px;
+    background: #000;
+    border-radius: 24px;
+    margin-bottom: 25px;
+    border: 1px solid #222;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    overflow: hidden;
+  }
+
+  .holo-zone:hover {
+    border-color: var(--neon);
+    box-shadow: 0 0 20px var(--neon-muted);
+  }
+
+  .holo-zone::after {
+    content: "";
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
+    transform: rotate(45deg);
+    animation: shine 4s infinite;
+  }
+
+  @keyframes shine {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+  }
+
+  #videoPreview {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Never crop 16:9 or 9:16 video */
+    display: none;
+    z-index: 2;
+  }
+
+  .upload-prompt {
+    z-index: 1;
+    transition: 0.3s;
+    padding: 20px;
+  }
+
+  .btn-elite {
+    width: 100%;
+    padding: 20px;
+    border-radius: 18px;
+    border: none;
+    background: linear-gradient(135deg, #fff 0%, #d1d1d1 100%);
+    color: #000;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .btn-elite:hover {
+    background: var(--neon);
+    box-shadow: 0 15px 30px var(--neon-muted);
+    transform: translateY(-2px);
+  }
+
+  .progress-wrap {
+    margin-top: 25px;
+    display: none;
+  }
+
+  .bar-container {
+    width: 100%;
+    height: 2px;
+    background: #222;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--neon);
+    box-shadow: 0 0 10px var(--neon);
+    transition: width 0.3s ease;
+  }
+
+  #status-msg {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  input[type="file"] { display: none; }
+
+  #toast {
+    visibility: hidden;
+    position: fixed;
+    top: 20px;
+    background: #ff3333;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 1000;
+  }
+  #toast.show { visibility: visible; animation: dropDown 2.5s; }
+
+  @keyframes dropDown {
+    0% { transform: translateY(-50px); opacity: 0; }
+    15% { transform: translateY(0); opacity: 1; }
+    85% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-50px); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<div class="card-elite">
+  <div class="status-pill">System Ready • <span id="productLabel">...</span></div>
+  
+  <h2>Activate AI Gift</h2>
+  <p class="desc">Link your memory video</p>
+
+  <div class="holo-zone" id="holoZone" onclick="document.getElementById('videoFile').click()">
+    <div class="upload-prompt" id="promptText">
+      <div style="font-size: 36px; margin-bottom: 8px; filter: grayscale(1);">⚡</div>
+      <div style="font-weight: 500; font-size: 14px;">CHOOSE MEMORY</div>
+    </div>
+    <video id="videoPreview" autoplay muted loop playsinline></video>
+  </div>
+
+  <input type="hidden" id="productId">
+  <input type="file" id="videoFile" accept="video/*" onchange="previewFile(this)">
+
+  <button class="btn-elite" id="uploadBtn" onclick="initiateUpload()">Upload & Link</button>
+
+  <div class="progress-wrap" id="progressBox">
+    <div class="bar-container">
+      <div class="bar-fill" id="progressBar"></div>
+    </div>
+    <div id="status-msg">Awaiting data...</div>
+  </div>
+</div>
+
+<div id="toast">SYSTEM RESTRICTION: ACTION BLOCKED</div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwNKAn8M35cvtmqMULFQLO_ElaE164FFq-tYEeN18U4g8quH_PP8bdn2csZG0WzWKuK/exec";
+
+// Security - Anti-Inspect
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener("keydown", e => {
+  if (e.key === "F12" || (e.ctrlKey && e.shiftKey && "IJC".includes(e.key)) || (e.ctrlKey && e.key === "u")) {
+    e.preventDefault();
+    const t = document.getElementById("toast");
+    t.className = "show";
+    setTimeout(() => { t.className = ""; }, 2500);
+  }
+});
+
+// Load Configuration
+window.onload = () => {
+  const pId = new URLSearchParams(window.location.search).get("product");
+  if(pId) {
+    document.getElementById("productId").value = pId;
+    document.getElementById("productLabel").innerText = pId;
+  } else {
+    document.getElementById("status-msg").innerText = "Error: Invalid Handshake";
+    document.getElementById("uploadBtn").disabled = true;
+  }
+};
+
+// Preview that dynamically locks container to the uploaded video's aspect ratio
+function previewFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const preview = document.getElementById('videoPreview');
+  const holoZone = document.getElementById('holoZone');
+  preview.src = URL.createObjectURL(file);
+
+  preview.onloadedmetadata = () => {
+    document.getElementById('promptText').style.display = 'none';
+    preview.style.display = 'block';
+    
+    // Automatically match the exact video aspect ratio (16:9, 9:16, etc.)
+    holoZone.style.aspectRatio = `${preview.videoWidth} / ${preview.videoHeight}`;
+  };
+}
+
+// Aspect-ratio-preserving compressor
+async function compressVideo(file, onProgress) {
+  return new Promise((resolve) => {
+    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+      resolve({ blob: file, isCompressed: false });
+      return;
+    }
+
+    const video = document.createElement('video');
+    video.src = URL.createObjectURL(file);
+    video.muted = true;
+    video.playsInline = true;
+
+    video.onloadedmetadata = () => {
+      const origW = video.videoWidth;
+      const origH = video.videoHeight;
+      const maxDim = 720;
+
+      let targetW, targetH;
+
+      // Scale proportionally preserving 16:9, 9:16, or any custom ratio
+      if (origW >= origH) {
+        // Landscape (e.g. 16:9)
+        targetW = origW > maxDim ? maxDim : origW;
+        targetH = Math.round(targetW * (origH / origW));
+      } else {
+        // Portrait (e.g. 9:16)
+        targetH = origH > maxDim ? maxDim : origH;
+        targetW = Math.round(targetH * (origW / origH));
+      }
+
+      // Codecs require even dimensions
+      targetW = targetW % 2 === 0 ? targetW : targetW - 1;
+      targetH = targetH % 2 === 0 ? targetH : targetH - 1;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+
+      const stream = canvas.captureStream(30);
+
+      // Audio track extraction
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaElementSource(video);
+        const dest = audioContext.createMediaStreamDestination();
+        source.connect(dest);
+        if (dest.stream.getAudioTracks().length > 0) {
+          stream.addTrack(dest.stream.getAudioTracks()[0]);
+        }
+      } catch (e) {}
+
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp8') 
+        ? 'video/webm;codecs=vp8' 
+        : 'video/webm';
+
+      let recorder;
+      try {
+        recorder = new MediaRecorder(stream, {
+          mimeType: mimeType,
+          videoBitsPerSecond: 1200000
+        });
+      } catch (e) {
+        resolve({ blob: file, isCompressed: false });
+        return;
+      }
+
+      const chunks = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        const compressedBlob = new Blob(chunks, { type: 'video/webm' });
+        resolve({ blob: compressedBlob, isCompressed: true });
+      };
+
+      video.play();
+      recorder.start();
+
+      function drawFrame() {
+        if (!video.paused && !video.ended) {
+          ctx.drawImage(video, 0, 0, targetW, targetH);
+          if (video.duration) {
+            const percent = Math.min(Math.round((video.currentTime / video.duration) * 100), 100);
+            if (onProgress) onProgress(percent);
+          }
+          requestAnimationFrame(drawFrame);
+        }
+      }
+
+      drawFrame();
+
+      video.onended = () => recorder.stop();
+      video.onerror = () => resolve({ blob: file, isCompressed: false });
+    };
+
+    video.onerror = () => resolve({ blob: file, isCompressed: false });
+  });
+}
+
+function fileToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = error => reject(error);
+  });
+}
+
+async function initiateUpload() {
+  const fileInput = document.getElementById("videoFile");
+  const file = fileInput.files[0];
+  const pId = document.getElementById("productId").value;
+  const status = document.getElementById("status-msg");
+  const bar = document.getElementById("progressBar");
+  const box = document.getElementById("progressBox");
+  const btn = document.getElementById("uploadBtn");
+
+  if (!file) return;
+
+  btn.disabled = true;
+  btn.innerText = "Processing...";
+  box.style.display = "block";
+  bar.style.width = "10%";
+  status.innerText = "Optimizing video...";
+
+  try {
+    const { blob, isCompressed } = await compressVideo(file, (percent) => {
+      bar.style.width = `${Math.round(percent * 0.5)}%`;
+      status.innerText = `Optimizing video (${percent}%)...`;
+    });
+
+    bar.style.width = "60%";
+    status.innerText = "Encoding payload...";
+
+    const base64 = await fileToBase64(blob);
+    
+    // Choose correct extension depending on whether WebM compression succeeded
+    const finalExtension = isCompressed ? ".webm" : (file.name.substring(file.name.lastIndexOf('.')) || ".mp4");
+    const cleanFileName = file.name.replace(/\.[^/.]+$/, "") + finalExtension;
+
+    bar.style.width = "75%";
+    status.innerText = "Transmitting to cloud...";
+
+    await fetch(WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      cache: "no-cache",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        productId: pId, 
+        file: base64, 
+        fileName: cleanFileName
+      })
+    });
+
+    bar.style.width = "100%";
+    status.style.color = "var(--neon)";
+    status.innerText = "Data Transferred Successfully";
+    btn.innerText = "Linked";
+
+  } catch (err) {
+    status.innerText = "UPLINK FAILED. RETRY.";
+    btn.disabled = false;
+    btn.innerText = "Retry Link";
+  }
+}
+</script>
+
+</body>
+</html>
