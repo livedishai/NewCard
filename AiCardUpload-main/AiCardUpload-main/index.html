@@ -169,7 +169,7 @@ document.getElementById("upload").onclick=async()=>{
   if(!category)return alert("Please select Product Category.");
   if(!FOLDERS[category])return alert("No Google Drive folder has been configured for "+category+".");
   if(!selected.length)return alert("Please select at least one catalogue image.");
-  if(APPS_SCRIPT_URL.includes("PASTE_YOUR"))return alert("Please set your Google Apps Script Web App URL in APPS_SCRIPT_URL.");
+  if(!APPS_SCRIPT_URL || !APPS_SCRIPT_URL.startsWith("https://"))return alert("Google Apps Script Web App URL is missing or invalid.");
 
   const btn=document.getElementById("upload");btn.disabled=true;
   try{
@@ -265,8 +265,8 @@ uploadVideoBtn.addEventListener("click", async () => {
     alert("Please select an AR video first.");
     return;
   }
-  if (APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
-    alert("Please set your Google Apps Script Web App URL in APPS_SCRIPT_URL.");
+  if (!APPS_SCRIPT_URL || !APPS_SCRIPT_URL.startsWith("https://")) {
+    alert("Google Apps Script Web App URL is missing or invalid.");
     return;
   }
 
